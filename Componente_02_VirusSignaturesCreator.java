@@ -1,31 +1,22 @@
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
-
+import javax.swing.JOptionPane;
 public class Componente_02_VirusSignaturesCreator  {
 	static final int TAMANHO_BUFFER = 4096;
 	private static String[] signatureDB;
@@ -43,6 +34,7 @@ public class Componente_02_VirusSignaturesCreator  {
         
         
 	public static void initSignatureDB(String pathToSignatures) {
+
 		System.out.println("Started signature initialization on folder: "
 				+ VIRUS_DB_PATH);
 		System.out.println("Finished signature initialization");
@@ -104,16 +96,7 @@ public class Componente_02_VirusSignaturesCreator  {
     /**
      * @param SIGNATURE_SIZE the SIGNATURE_SIZE to set
      */
-    public void setSIGNATURE_SIZE(int SIGNATURE_SIZE) {
-        this.SIGNATURE_SIZE = SIGNATURE_SIZE;
-    }
-
-    /**
-     * @param VIRUS_DB_PATH the VIRUS_DB_PATH to set
-     */
-    public void setVIRUS_DB_PATH(String VIRUS_DB_PATH) {
-        this.VIRUS_DB_PATH = VIRUS_DB_PATH;
-    }
+   
     
      
     
@@ -122,33 +105,55 @@ public class Componente_02_VirusSignaturesCreator  {
         
 		String arquivo = System.getProperty("user.dir") + "/VirusDoCliente.zip";
 
-        String login,senha;
+       
         ServerSocket sv = new ServerSocket(6001);
 
 	    while(true){
-	        System.out.println("Conectado a porta 6000");
+	        JOptionPane.showMessageDialog(null, "Conectado a porta 6001\nAguardando conexao...");
+
+	        System.out.println("Conectado a porta 6001\n");
 	        Socket sk = sv.accept();
 	        DataInputStream msgDoCliente = new DataInputStream(sk.getInputStream());
 	       // ZipInputStream  zis = new ZipInputStream(new BufferedInputStream(msgDoCliente));
 	       //;
-	        compactarParaZip(arquivo, msgDoCliente );
-	        Descompactar(arquivo);
-	        System.out.println("ok");
-	        initSignatureDB(VIRUS_DB_PATH);
-	        System.out.println(signatureDB);
 	        
+	        try{
+	        	compactarParaZip(arquivo, msgDoCliente );
+	        	JOptionPane.showMessageDialog(null, "Arquivo Recebido com sucesso\n Iniciando a descompactação...");
+	        	Descompactar(arquivo);
+	        	
+	        }catch(Exception e){
+	        	JOptionPane.showMessageDialog(null, "Ocorreu um erro na descompactação do arquivo");
+	        }
 	        
-	        Socket sk2 = new Socket("25.37.182.144",6000);
-	        ObjectOutputStream l = new ObjectOutputStream(sk2.getOutputStream());            
-          l.writeObject(signatureDB);
-	
-            sk2.close();
-            
+	        try{
+	        	JOptionPane.showMessageDialog(null, "Criando as assinaturas de virus...");
+		        initSignatureDB(VIRUS_DB_PATH);
+	        }catch(Exception e){
+	        	JOptionPane.showMessageDialog(null, "Erro ao criar assinaturas de virus...");
+	        }
+	       
+	        try{
+	        	 JOptionPane.showMessageDialog(null, "Estabelecendo conexão com a maquina 3...");
+	        	Socket sk2 = new Socket("25.37.182.144",6000);
+	 	        ObjectOutputStream l = new ObjectOutputStream(sk2.getOutputStream());            
+	           l.writeObject(signatureDB);
+	           JOptionPane.showMessageDialog(null, "Arquivos enviados para a maquina 3...");
+	            sk2.close();
+
+	        }catch(IOException e){
+		        JOptionPane.showMessageDialog(null, "Falha ao estabelecer conexão com a maquina 3...");
+
+	        }
+	        sk.close();
+
 	        
 	    }
                 
                     
     }
+    
+    
     
     
     
@@ -182,7 +187,8 @@ public class Componente_02_VirusSignaturesCreator  {
         public static void Descompactar(String arquivo) throws IOException{
         // Abre o arquivo .zip
         //File arquivoZip = new File(caminho+"/Virus.zip");
- 
+           // JOptionPane.showMessageDialog(null, "Arquivo Recebido com sucesso\n Iniciando a descompactação...");
+
         try {
 			// Caminho do arquivo ZIP
         	String zipFile = arquivo;
